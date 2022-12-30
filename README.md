@@ -25,6 +25,10 @@ d....
 .....
 ```
 
+Also seen in `templates/registration-mark.png`:
+
+![templates/registration-mark.png](templates/registration-mark.png)
+
 This gives the tool a registration mark to know where the embark begins. 
 Otherwise it won't know the right crop boundary for the images.
 
@@ -41,3 +45,12 @@ I can zoom all the way out and capture a 4x4 embark area with 6 screenshots
 ## Running
 
 `python df-screenshot-to-map.py`
+
+## Examples
+
+See the `examples` folder for some screenshots and a slightly modified ODS spreadsheet with conditional formatting.
+
+## TODO:
+
+- Iterate over the elevation folders, creating a new sheet in the ODS file for each elevation.
+- Set a better column width and conditional formatting to the ODS file.
