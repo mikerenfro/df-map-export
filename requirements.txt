@@ -1,4 +1,4 @@
-stitching
-imageio
+numpy
 opencv-python
-pyexcel-ods3
+openpyxl
+scipy

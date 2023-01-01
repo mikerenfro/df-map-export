@@ -152,3 +152,4 @@ cython_debug/
 #.idea/
 screenshots/*
 !screenshots/.gitkeep
+templates/walls/*.png

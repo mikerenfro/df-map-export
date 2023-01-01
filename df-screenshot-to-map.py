@@ -1,152 +1,373 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Make an Excel file of Dwarf Fortress map elevations from minimap screenshots.
 
-from collections import OrderedDict
-import cv2 as cv
+@author: Mike Renfro
+
+Given a series of screenshots of Dwarf Fortress minimaps at different
+elevations:
+
+- Identify underground areas (should be around RGB (128, 128, 128))
+- Use largest identified underground area to define extents of map region.
+- For each elevation:
+    - crop the minimap to the overall extents
+    - create a normalized 2D interpolant of the minimap bounded by
+      [0, 0, 0] <= (x, y, z) <= [1, 1, 255]
+    - map the 2D interpolant to a (x, y) grid of size
+      (48*embark_size, 48*embark_size) bounded by [0, 0] <= (x, y) <= [1, 1]
+    - round each the interpolated value to 0 or 1
+    - insert each interpolated value into a new workbook sheet
+    - apply a color scale conditional format to the sheet
+"""
+import argparse
+import cv2
 import glob
-import imageio.v2 as imageio
+import numpy as np
+from openpyxl import Workbook
+from openpyxl.formatting.rule import ColorScaleRule
+from openpyxl.utils import get_column_letter
 import os
-from PIL import Image
-import pyexcel_ods3
-import stitching
-import time
+import scipy
+
 
 def find_valid_worlds(basedir):
+    """
+    Find folders containing minimap screenshots.
+
+    Parameters
+    ----------
+    basedir : str
+        Path to folder containing Dwarf Fortress screenshot folders.
+
+    Returns
+    -------
+    valid_worlds : list
+        List of paths to folders under basedir containing valid minimap
+        screenshots.
+
+    """
     worlds = glob.glob(os.path.join(basedir, '*'))
     valid_worlds = []
     if worlds:
         for world in worlds:
             if os.path.isdir(world):
-                elevations = find_valid_elevations(world)
+                elevations = glob.glob(os.path.join(world, '*.png'))
                 if elevations:
                     valid_worlds.append(world)
     return valid_worlds
 
-def find_valid_elevations(world):
-    elevations = glob.glob(os.path.join(world, '*'))
-    valid_elevations = []
-    if elevations:
-        for elevation in elevations:
-            if os.path.isdir(elevation):
-                screenshots = glob.glob(os.path.join(elevation, '*.png'))
-                if screenshots:
-                    valid_elevations.append(elevation)
-    return valid_elevations
 
-def stitch_images_in_elevation(elevation):
-    stitched_file = '{0}.png'.format(elevation)
-    if os.path.exists(stitched_file):
-        print("Stitched file {0} already exists".format(stitched_file))
+def safe_imshow(title='Image', image=None):
+    """
+    Safely show an OpenCV image.
+
+    Parameters
+    ----------
+    title : str, optional
+        Title of the image window. The default is 'Image'.
+    image : array_like, technically optional
+        Image to show. The default is None.
+
+    Returns
+    -------
+    None.
+
+    """
+    cv2.imshow(title, image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+
+def crop_top_titlebar(image):
+    """
+    Crop out title bar from minimap screenshot.
+
+    Parameters
+    ----------
+    image : array_like
+        Screenshot wih some part of title bar at top.
+
+    Returns
+    -------
+    cropped_image : array_like
+    """
+    # Convert to greyscale, then look for first black pixel in first
+    # column.
+    greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    first_black_row = np.where(greyscale[:, 0] == 0)[0][0]
+    image = image[first_black_row:, :, :]
+    # Convert new image to greyscale, then look for the first non-black pixel
+    # in the first column.
+    greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    first_non_black_row = np.where(greyscale[:, 0] != 0)[0][0]
+    cropped_image = image[first_non_black_row:, :, :]
+    return cropped_image
+
+
+def crop_right_window_border(image):
+    """
+    Crop out window border from minimap screenshot.
+
+    Parameters
+    ----------
+    image : array_like
+        Screenshot wih some part of window border at right.
+
+    Returns
+    -------
+    cropped_image : array_like
+    """
+    # Convert to greyscale, then look for last non pure black pixel in last
+    # row.
+    greyscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    last_black_column = np.where(greyscale[-1, :] != 0)[0][-1]
+    cropped_image = image[:, :last_black_column, :]
+    return cropped_image
+
+
+def get_underground_pixels(image, extents=None):
+    """
+    Get all the pixels representing underground locations.
+
+    Parameters
+    ----------
+    image : array_like
+        Minimap of a given elevation.
+    extents : tuple of (left, right, top, bottom) or None (default)
+        Extents of the underground pixels in this elevation, if known, or None
+        if unknown. Image will be cropped to extents if known, or whole image
+        will be used if unknown.
+
+    Returns
+    -------
+    im_result : array_like
+        Pixels of underground regions.
+    """
+    lower = (125, 125, 125)
+    upper = (130, 130, 130)
+    if extents is None:
+        mask = cv2.inRange(image, lower, upper)
     else:
-        screenshots = glob.glob(os.path.join(elevation, '*.png'))
-        print("Found screenshots in {0}, stitching.".format(elevation))
-        # print(screenshots)
-        settings = {} # {"warper_type": "plane", "block_size": 128}
-        #stitcher = stitching.Stitcher(**settings)
-        stitcher = stitching.AffineStitcher(**settings)
-        start = time.time()
-        panorama = stitcher.stitch(screenshots)
-        end = time.time()
-        print('{0:.1f} seconds elaspsed'.format(end-start))
-        print("Saving to {0}".format(stitched_file))
-        cv.imwrite(stitched_file, panorama)
-    return stitched_file
+        (left, right, top, bottom) = extents
+        mask = cv2.inRange(image[top:bottom, left:right], lower, upper)
 
-def find_registration_mark(stitched_file, template_file):
-    # Find the registration mark to get top-left origin of embark
-    template = cv.imread(template_file) 
-    stitched_image = cv.imread(stitched_file)
-    w, h = template.shape[-2::-1]
-    res = cv.matchTemplate(stitched_image, template, cv.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
-    top_left = max_loc
-    bottom_right = (top_left[0] + w, top_left[1] + h)
-    return top_left, bottom_right
+    # Remove small blobs from mask
+    # https://stackoverflow.com/a/42812226
+    # safe_imshow(image=mask, title='Original Mask')
+    (nb_blobs, im_with_separated_blobs,
+     stats, _) = cv2.connectedComponentsWithStats(mask)
+    sizes = stats[:, -1]
+    sizes = sizes[1:]
+    nb_blobs -= 1
+    min_size = 50
+    im_result = np.zeros((mask.shape))
+    # print("Mask shape:", mask.shape)
+    # for every component in the image, keep it only if it's above min_size
+    for blob in range(nb_blobs):
+        # print("On blob", blob, "of", nb_blobs)
+        if sizes[blob] >= min_size:
+            im_result[im_with_separated_blobs == blob + 1] = 255
+    im_result = im_result/255.0
 
-def crop_image_to_embark(stitched_file, embark_size, top_left, bottom_right):
-    # top_left to bottom_right makes up a 2x2 tile space
-    # embarks have 48x48 tiles per embark space (so 4x4 embark is 192x192 tiles)
-    # let w = bottom_right[0] - top_left[0], h = bottom_right[1] - top_left[1]
-    # crop starting at top_left, and extending embark_size*48*w/2
-    w = bottom_right[0] - top_left[0]
-    h = bottom_right[1] - top_left[1]
-    tile_size = int(w/2)
-    tile_count = embark_size[0]*48
-    cropped_size = int(tile_size*tile_count)
-    stitched_image = cv.imread(stitched_file)
-    print("cropping original image to size {0} x {0}".format(cropped_size))
-    cropped_image = stitched_image[top_left[1]:(top_left[1]+cropped_size), top_left[0]:(top_left[0]+cropped_size)]
-    dir = os.path.dirname(stitched_file)
-    basename = os.path.basename(stitched_file)
-    cropped_file = os.path.join(dir, 'cropped-'+basename)
-    cv.imwrite(cropped_file, cropped_image)
-    return cropped_file
+    return im_result
 
-def mask_cropped_file(cropped_file):
-    print("Thresholding and masking cropped image")
-    grey = cv.cvtColor(cv.imread(cropped_file), cv.COLOR_BGR2GRAY)
-    # cv.imwrite('grey.png', grey)
-    thresh = cv.threshold(grey, 56, 255, cv.THRESH_BINARY_INV)[1]
-    # cv.imwrite('grey-thresh.png', thresh)
-    # Filter using contour area and remove small noise
-    cnts = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    for c in cnts:
-        area = cv.contourArea(c)
-        if area < 3000:
-            cv.drawContours(thresh, [c], -1, (0,0,0), -1)
-    # cv.imwrite('grey-thresh2.png', thresh)
-    kernel = cv.getStructuringElement(cv.MORPH_RECT, (tile_size+1, tile_size+1))
-    close = 255 - cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel, iterations=2)
-    dir = os.path.dirname(cropped_file)
-    basename = os.path.basename(cropped_file)
-    masked_file = os.path.join(dir, 'masked-'+basename)
-    cv.imwrite(masked_file, close)
-    return masked_file
 
-def reduce_masked_file(masked_file, tile_size, embark_size):
-    # Resize down so each new pixel corresponds to a tile
-    im = Image.open(masked_file)
-    tile_count = embark_size[0]*48
-    masked_size = int(tile_size*tile_count)
-    reduced_size = masked_size/tile_size
-    print("Reducing image to size", reduced_size)
-    dir = os.path.dirname(masked_file)
-    basename = os.path.basename(masked_file)
-    reduced_file = os.path.join(dir, 'reduced-'+basename)
-    im.thumbnail((reduced_size, reduced_size), Image.Resampling.NEAREST)
-    im.save(reduced_file)
-    return reduced_file
+def get_elevation_underground_extents(image):
+    """
+    Get extents of bounding box underground regions in an elevation.
 
-def convert_to_ods(reduced_file):
-    # Converting cropped image into "diggable" and "not diggable"
-    print("Converting to ODS format")
-    bw_data = imageio.imread(reduced_file)
-    data = OrderedDict()
-    data.update({'Sheet 1': bw_data.tolist()})
-    dir = os.path.dirname(reduced_file)
-    basename = os.path.basename(reduced_file)
-    basest_name = os.path.splitext(basename)[0]
-    ods_file = os.path.join(dir, basest_name+'.ods')
-    pyexcel_ods3.save_data(ods_file, data)
-    return ods_file
+    Parameters
+    ----------
+    image : array_like
+        Minimap with caption and surrounding border.
+
+    Returns
+    -------
+    extents : tuple of (x_topleft, y_topleft, x_botright, y_botright)
+        Indices of the rectangle bounding all underground regions.
+    """
+    # safe_imshow(image=image, title='Original')
+    im_result = get_underground_pixels(image)
+
+    # safe_imshow(image=im_result, title='Cleaned Up Mask')
+
+    # Find bounding rectangles of mask shapes, use outermost values to define
+    # underground extents of this elevation
+    # https://stackoverflow.com/a/21108680 and
+    # https://stackoverflow.com/a/60106329
+    im_result = im_result.astype(np.uint8)
+    contours, hierarchy = cv2.findContours(im_result, cv2.RETR_LIST,
+                                           cv2.CHAIN_APPROX_SIMPLE)[-2:]
+    idx = 0
+    most_left, most_right, most_up, most_down = None, None, None, None
+    for cnt in contours:
+        idx += 1
+        x, y, w, h = cv2.boundingRect(cnt)
+        if (most_left is None) or (x < most_left):
+            most_left = x
+        if (most_right is None) or (x+w > most_right):
+            most_right = x+w
+        if (most_up is None) or (y < most_up):
+            most_up = y
+        if (most_down is None) or (y+h > most_down):
+            most_down = y+h
+    return (most_left, most_up, most_right, most_down)
+
+
+def update_overall_underground_extents(elevation_extents, current_extents):
+    """
+    Update overall extents of underground regions for all elevations.
+
+    Parameters
+    ----------
+    elevation_extents : tuple of (int, int, int, int)
+        Underground extents of an elevation, ordered as
+        (left, top, right, bottom).
+    current_extents : tuple of (int, int, int, int) or (None, None, None, None)
+        Current maximum extents of all elevations, ordered as
+        (left, top, right, bottom).
+
+    Returns
+    -------
+    current_extents : tuple of (int, int, int, int)
+        Updated  maximum extents of all elevations, ordered as
+        (left, top, right, bottom).
+    """
+    left, top, right, bottom = (elevation_extents)
+    leftmost, topmost, rightmost, bottommost = (current_extents)
+    if (leftmost is None) or (left < leftmost):
+        leftmost = left
+    if (rightmost is None) or (right > rightmost):
+        rightmost = right
+    if (topmost is None) or (top < topmost):
+        topmost = top
+    if (bottommost is None) or (bottom > bottommost):
+        bottommost = bottom
+    return (leftmost, topmost, rightmost, bottommost)
+
+
+def main(world, elevation_start, elevation_step,
+         basedir='screenshots', embark_size=(4, 4)):
+    """
+    Convert a folder of minimaps into editable Excel format.
+
+    Parameters
+    ----------
+    embark_size : tuple of (int, int)
+        Size of the embark area. Currently only supports square embark regions.
+
+    Returns
+    -------
+    None.
+
+    """
+    # worlds = find_valid_worlds(basedir)
+    # for world in worlds:
+    # print('world:', world)
+    elevation = elevation_start
+    leftmost, rightmost, topmost, bottommost = None, None, None, None
+    minimap_dict = {}
+    if not glob.glob(os.path.join(basedir, world, '*.png')):
+        raise OSError('{0} contains no PNG screenshots'.format(os.path.join(basedir, world)))
+    for png in glob.glob(os.path.join(basedir, world, '*.png')):
+        # print(png)
+        minimap = cv2.imread(png)
+        minimap = crop_top_titlebar(minimap)
+        minimap = crop_right_window_border(minimap)
+        # try:
+        #     elevation = get_elevation(minimap)
+        # except RuntimeError:
+        #     elevation = None
+        # verify_elevation(minimap, png, elevation)
+        # print("{0} is from elevation {1}".format(png, elevation))
+        minimap_dict[elevation] = minimap
+        (left, top, right, bottom) = get_elevation_underground_extents(minimap)
+        # print("Underground extents from ({0}, {1}) to ({2}, {3})".format(
+        #       left, top, right, bottom))
+        (leftmost, topmost,
+         rightmost, bottommost) = update_overall_underground_extents(
+                                    (left, top, right, bottom),
+                                    (leftmost, topmost, rightmost, bottommost)
+                                    )
+        elevation = elevation + elevation_step
+    # Figure out overall map extents from elevation underground extents
+    # print("Overall extents from ({0}, {1}) to ({2}, {3})".format(
+    #     leftmost, topmost, rightmost, bottommost))
+
+    wb = Workbook()
+    sheet_first_row = 1
+    sheet_last_row = sheet_first_row + 48*embark_size[0] - 1
+    sheet_first_column = 1
+    sheet_last_column = sheet_first_column + 48*embark_size[1] - 1
+    sheet_first_column_letter = get_column_letter(sheet_first_column)
+    sheet_last_column_letter = get_column_letter(sheet_last_column)
+    print("Converting underground pixels in elevation:", end='', flush=True)
+    for elevation, minimap in minimap_dict.items():
+        ws = wb.create_sheet(title="Elev {0}".format(elevation))
+        print(" {0}".format(elevation), end='', flush=True)
+        # All minimaps have a common upper-right location
+        pixels = get_underground_pixels(minimap,
+                                        (leftmost, rightmost,
+                                         topmost, bottommost))
+        # print(pixels.shape)
+        # print(pixels[0, :])
+        # safe_imshow(image=pixels)
+        x_orig = np.linspace(0, 1,
+                             minimap[topmost:bottommost,
+                                     leftmost:rightmost].shape[1])
+        y_orig = np.linspace(0, 1,
+                             minimap[topmost:bottommost,
+                                     leftmost:rightmost].shape[0])
+        # print(x_orig.shape, y_orig.shape, pixels.shape)
+        x_interp = np.linspace(0, 1, 48*embark_size[0])
+        y_interp = np.linspace(0, 1, 48*embark_size[1])
+        interpolant = scipy.interpolate.RectBivariateSpline(y_orig,
+                                                            x_orig,
+                                                            pixels)
+        row = 1
+        for x in x_interp:
+            col = 1
+            for y in y_interp:
+                pixel = np.round(interpolant(y, x))
+                if (pixel==1):
+                    _ = ws.cell(column=row, row=col, value=pixel[0, 0])
+                col = col + 1
+            row = row + 1
+        # Create conditional format rule for this sheet
+        rule = ColorScaleRule(start_type='min', start_color='FFFFFF',
+                              end_type='max', end_color='000000')
+        ws.conditional_formatting.add('{0}{1}:{2}{3}'.format(
+            sheet_first_column_letter, sheet_first_row,
+            sheet_last_column_letter, sheet_last_row), rule)
+        # Set width of columns
+        for i in range(sheet_first_column, sheet_last_column+1):
+            ws.column_dimensions[get_column_letter(i)].width = 2.875
+
+    print(" done.")
+
+    # wb.remove('Sheet')
+    print("Saving spreadsheet: ", end='', flush=True)
+    wb.save("{0}.xlsx".format(world))
+    print("done.")
+
 
 if __name__ == "__main__":
-    worlds = find_valid_worlds('screenshots')
-    # print('worlds:', worlds)
-    for world in worlds:
-        print('world:', world)
-        elevations = find_valid_elevations(world)
-        for elevation in elevations:
-            # print('elevation:', elevation)
-            stitched_file = stitch_images_in_elevation(elevation)
-            template_file = os.path.join('templates', 'registration-mark.png')
-            top_left, bottom_right = find_registration_mark(stitched_file, template_file)
-            w = bottom_right[0] - top_left[0]
-            h = bottom_right[1] - top_left[1]
-            tile_size = int(w/2)
-            print('Found registration mark at from {0} to {1} ({2} x {3})'.format(top_left, bottom_right, w, h))
-            embark_size = (4, 4)
-            cropped_file = crop_image_to_embark(stitched_file, embark_size, top_left, bottom_right)
-            masked_file = mask_cropped_file(cropped_file)
-            reduced_file = reduce_masked_file(masked_file, tile_size, embark_size)
-            ods_file = convert_to_ods(reduced_file)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--basedir", type=str, default='screenshots',
+                        help="Base directory containing folders with minimap screenshots (defaults to 'screenshots')")
+    parser.add_argument("world", type=str,
+                        help="Folder in basedir containing minimap screenshots")
+    parser.add_argument("elevation_start", type=int,
+                        help="Elevation of first minimap screenshot")
+    parser.add_argument("elevation_step", type=int,
+                        help="Elevation step size (-1 for descending order, 1 for ascending order)")
+    parser.add_argument("embark_size", type=int,
+                        help="Embark map size (only square embarks supported currently)")
+    args = parser.parse_args()
+    main(world=args.world, elevation_start=args.elevation_start,
+         elevation_step=args.elevation_step, basedir=args.basedir,
+         embark_size=(args.embark_size, args.embark_size))
+    # main(world='Camade Oroni',
+    #      elevation_start=70,
+    #      elevation_step=-1)
