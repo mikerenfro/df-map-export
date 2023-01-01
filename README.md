@@ -56,7 +56,11 @@ options:
   --basedir BASEDIR  Base directory containing folders with minimap screenshots (defaults to 'screenshots')
 ```
 
-`python df-screenshot-to-map.py worldname elevation_start elevation_step embar_size`
+`python df-screenshot-to-map.py worldname elevation_start elevation_step embark_size`
+
+For example, if you copy the PNGs from `examples` to `screenshots/Camade Oroni 1`:
+
+`python df-screenshot-to-map.py "Camade Oroni 1" 70 -1 4`
 
 ## Examples
 
