@@ -29,7 +29,7 @@ or from the lowest elevation of interest and work your way up.
 Having some extra pixels around the minimap is ok, too --
 the program should be able to crop out the title bar and GUI elements around the minimap.
 
-![Camade Oroni minimap screenshot, elevation 70](examples/screenshots/Camade Oroni 1/2022-12-31 19_24_37-Window.png)
+![Camade Oroni minimap screenshot, elevation 70](examples/screenshots/Camade%20Oroni%201/2022-12-31%2019_24_37-Window.png)
 
 ## Screenshots folder
 
