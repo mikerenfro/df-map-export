@@ -9,7 +9,7 @@ The workbook will have conditional formatting applied allowing you to copy/paste
 The method isn't perfect, since the minimap has some JPEG-like compression artifacts around the borders of the underground regions,
 but it should be pretty accurate and much quicker than mapping manually.
 
-[![Results: original minimap and one worksheet from an Excel workbook](result-thumbnail.png)](result.png])
+[![Results: original minimap and one worksheet from an Excel workbook](result-thumbnail.png)](result.png)
 
 ## Installation
 
