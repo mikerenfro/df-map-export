@@ -247,13 +247,23 @@ def update_overall_underground_extents(elevation_extents, current_extents):
     return (leftmost, topmost, rightmost, bottommost)
 
 
-def main(world, elevation_start, elevation_step,
-         basedir='screenshots', embark_size=(4, 4)):
+def main(world, elevation_start, elevation_step, zoom,
+         basedir, embark_size):
     """
     Convert a folder of minimaps into editable Excel format.
 
     Parameters
     ----------
+    basedir : str
+        Base directory containing folders with minimap screenshots
+    world : str
+        Folder in basedir containing minimap screenshots
+    elevation_start : int
+        Elevation of first minimap screenshot
+    elevation_step : int
+        Elevation step size (-1 for descending order, 1 for ascending order)
+    zoom : int
+        Spreadsheet zoom level (in percent)
     embark_size : tuple of (int, int)
         Size of the embark area. Currently only supports square embark regions.
 
@@ -343,6 +353,7 @@ def main(world, elevation_start, elevation_step,
         # Set width of columns
         for i in range(sheet_first_column, sheet_last_column+1):
             ws.column_dimensions[get_column_letter(i)].width = 2.875
+        ws.sheet_view.zoomScale = zoom
 
     print(" done.")
 
@@ -356,18 +367,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--basedir", type=str, default='screenshots',
                         help="Base directory containing folders with minimap screenshots (defaults to 'screenshots')")
+    parser.add_argument("--zoom", type=int, default=25,
+                        help="Spreadsheet zoom level (in percent, defaults to 25)")
     parser.add_argument("world", type=str,
                         help="Folder in basedir containing minimap screenshots")
     parser.add_argument("elevation_start", type=int,
                         help="Elevation of first minimap screenshot")
     parser.add_argument("elevation_step", type=int,
                         help="Elevation step size (-1 for descending order, 1 for ascending order)")
-    parser.add_argument("embark_size", type=int,
-                        help="Embark map size (only square embarks supported currently)")
+    parser.add_argument("embark_size", type=int, default=4,
+                        help="Embark map size (only square embarks supported currently, defaults to 4)")
     args = parser.parse_args()
     main(world=args.world, elevation_start=args.elevation_start,
          elevation_step=args.elevation_step, basedir=args.basedir,
-         embark_size=(args.embark_size, args.embark_size))
+         embark_size=(args.embark_size, args.embark_size),
+         zoom=args.zoom)
     # main(world='Camade Oroni',
     #      elevation_start=70,
     #      elevation_step=-1)
