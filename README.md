@@ -1,72 +1,72 @@
-# Dwarf Fortress Screenshot to Map Tool
+# Dwarf Fortress Elevations to Map Tool
 
-Reads a series of minimap screenshots for each elevation of a Dwarf Fortress embark,
+Reads a series of text files for each elevation of a Dwarf Fortress embark,
 identifies the underground sections,
-and creates an Excel workbook showing the diggable areas (more or less) with one worksheet per elevation.
+and creates an Excel workbook showing the diggable areas with one worksheet per elevation.
 The workbook will have conditional formatting applied allowing you to copy/paste different values in the underground regions
 (0 is white, 1 is black, and values outside that range will be uncolored).
 
-The method isn't perfect, since the minimap has some JPEG-like compression artifacts around the borders of the underground regions,
-but it should be pretty accurate and much quicker than mapping manually.
+This is a much better method than my first attempt that did a lot of image processing of screenshots, but does require use of [DFHack](https://docs.dfhack.org/) to create the text files.
 
-[![Results: original minimap and one worksheet from an Excel workbook](result-thumbnail.png)](result.png)
+[![Original minimap](embark-elevation-df-thumbnail.png)](embark-elevation-df.png)
+
+[![Corresponding worksheet from an Excel workbook](embark-elevation-excel-thumbnail.png)](embark-elevation-excel.png)
 
 ## Installation
+
+### Python script
 
 `pip install -r requirements.txt`
 
 Currently uses:
 
-- numpy
-- opencv-python
 - openpyxl
-- scipy
+
+### DFHack and Lua script
+
+See [Installing DFHack](https://docs.dfhack.org/en/stable/docs/Installing.html) for instructions on how to install DFHack.
+
+Copy `export-diggable-areas.lua` to the DFHack scripts folder (in the Steam version, that's `Dwarf Fortress/hack/scripts`).
 
 ## In Dwarf Fortress
 
-Ideally, right after you start a new embark,
-pause the game and take a series of screenshots at each map elevation that includes the entire minimap.
-Start at either the highest elevation of interest and work your way down,
-or from the lowest elevation of interest and work your way up.
-Having some extra pixels around the minimap is ok, too --
-the program should be able to crop out the title bar and GUI elements around the minimap.
+Ideally, right after you start a new embark with DFHack enabled,
+pause the game and run `export-diggable-areas` in DFHack.
+By default, `export-diggable-areas` will not show any fully subterranean elevations to reduce spoilers.
+Run it as `export-diggable-areas spoilers` (or any other parameter) to get exports from all elevations.
 
-![Camade Oroni minimap screenshot, elevation 70](examples/screenshots/Camade%20Oroni%201/2022-12-31%2019_24_37-Window.png)
+## Elevations folder
 
-## Screenshots folder
-
-Organize your screenshots in this folder by world name and elevation, for example: `screenshots/Camade Oroni 1/*.png` for all screenshots taken of *Camade Oroni* game 1.
-It shouldn't matter what the files are named, as long as they're PNG files.
-Make sure their filenames are ordered by elevation, either ascending or descending.
-If your screenshot tool includes a YYYY-MM-DD-HH-MM-SS style timestamp in the filenames (for example, Greenshot), that should be sufficient.
+Organize your text export files in this folder by world name, for example: `elevations/Mineally/elevation-*.txt` for all text files from the *Mineally* embark.
 
 ## Running
 
 `python df-screenshot-to-map.py --help` for help. Currently shows:
 
 ```
-usage: df-screenshot-to-map.py [-h] [--basedir BASEDIR] world elevation_start elevation_step embark_size
+usage: df-screenshot-to-map.py [-h] [--basedir BASEDIR] [--zoom ZOOM]
+                               [--embark-elevation EMBARK_ELEVATION]
+                               world
 
 positional arguments:
-  world              Folder in basedir containing minimap screenshots
-  elevation_start    Elevation of first minimap screenshot
-  elevation_step     Elevation step size (-1 for descending order, 1 for ascending order)
-  embark_size        Embark map size (only square embarks supported currently)
+  world                 Folder in basedir containing minimap screenshots
 
 options:
-  -h, --help         show this help message and exit
-  --basedir BASEDIR  Base directory containing folders with minimap screenshots (defaults to 'screenshots')
+  -h, --help            show this help message and exit
+  --basedir BASEDIR     Base directory containing folders with minimap elevations (defaults to
+                        'elevations')
+  --zoom ZOOM           Spreadsheet zoom level (in percent, defaults to 25)
+  --embark-elevation EMBARK_ELEVATION
+                        Elevation of embark site (if specified, will set active sheet in Excel workbook)
 ```
-
-`python df-screenshot-to-map.py worldname elevation_start elevation_step embark_size`
 
 For example, if you copy the PNGs from `examples` to `screenshots/Camade Oroni 1`:
 
-`python df-screenshot-to-map.py "Camade Oroni 1" 70 -1 4`
+`python .\df-screenshot-to-map.py --basedir examples/elevations Mineally --embark-elevation 36`
 
 ## Examples
 
-See the `examples` folder for some screenshots and resulting spreadsheet.
+See the `examples` folder for some elevation files and resulting spreadsheet.
 
 ## TODO:
 
