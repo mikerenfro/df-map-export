@@ -60,9 +60,13 @@ options:
                         Elevation of embark site (if specified, will set active sheet in Excel workbook)
 ```
 
-For example, if you copy the PNGs from `examples` to `screenshots/Camade Oroni 1`:
+For example, if you use the deafult text files in the `examples/elevations/Mineally` folder:
 
 `python .\df-screenshot-to-map.py --basedir examples/elevations Mineally --embark-elevation 36`
+
+Or if you copy them to the `elevations` folder:
+
+`python .\df-screenshot-to-map.py Mineally --embark-elevation 36`
 
 ## Examples
 
