@@ -34,6 +34,7 @@ Ideally, right after you start a new embark with DFHack enabled,
 pause the game and run `export-diggable-areas` in DFHack.
 By default, `export-diggable-areas` will not show any fully subterranean elevations to reduce spoilers.
 Run it as `export-diggable-areas spoilers` (or any other parameter) to get exports from all elevations.
+This will write a set of elevation-*.txt files to the main Dwarf Fortress folder.
 
 ## Elevations folder
 
