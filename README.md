@@ -60,7 +60,7 @@ options:
                         Elevation of embark site (if specified, will set active sheet in Excel workbook)
 ```
 
-For example, if you use the deafult text files in the `examples/elevations/Mineally` folder:
+For example, if you use the default text files in the `examples/elevations/Mineally` folder:
 
 `python .\df-screenshot-to-map.py --basedir examples/elevations Mineally --embark-elevation 36`
 
