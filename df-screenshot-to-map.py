@@ -43,7 +43,7 @@ def main(world, zoom, basedir, embark_elevation):
 
     """
     minimap_dict = {}
-    embark_size = (None, None)
+    map_size = (None, None)
     if not glob.glob(os.path.join(basedir, world, 'elevation-*.txt')):
         raise OSError('{0} contains no elevation-*.txt files'.format(os.path.join(basedir, world)))
     for filename in glob.glob(os.path.join(basedir, world, 'elevation-*.txt')):
@@ -51,16 +51,15 @@ def main(world, zoom, basedir, embark_elevation):
         elevation = int(elevation_list[0])
         with open(filename, 'r') as f:
             lines = f.readlines()
-            if embark_size == (None, None):
-                embark_size = (int(len(lines)/48), int((len(lines[0])-1)/48))
+            if map_size == (None, None):
+                map_size = (len(lines), len(lines[0].strip()))
         minimap_dict[elevation] = lines
-    # print(embark_size)
 
     wb = Workbook()
     sheet_first_row = 1
-    sheet_last_row = sheet_first_row + 48*embark_size[0] - 1
+    sheet_last_row = sheet_first_row + map_size[0] - 1
     sheet_first_column = 1
-    sheet_last_column = sheet_first_column + 48*embark_size[1] - 1
+    sheet_last_column = sheet_first_column + map_size[1] - 1
     sheet_first_column_letter = get_column_letter(sheet_first_column)
     sheet_last_column_letter = get_column_letter(sheet_last_column)
     print("Converting underground pixels in elevation: ", end='', flush=True)
@@ -70,12 +69,8 @@ def main(world, zoom, basedir, embark_elevation):
         minimap = minimap_dict[elevation]
         ws = wb.create_sheet(title="Elev {0}".format(elevation))
         print(" {0}".format(elevation), end='', flush=True)
-        row = 0
-        for line in minimap:
-            row = row+1
-            col = 0
-            for pixel in line.strip():
-                col = col+1
+        for row, line in enumerate(minimap, start=1):
+            for col, pixel in enumerate(line.strip(), start=1):
                 if (pixel=='1'):
                     # print('Should make a black pixel at (row, col)=({0}, {1})'.format(row, col))
                     _ = ws.cell(column=col, row=row, value=int(pixel))
