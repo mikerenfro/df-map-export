@@ -72,7 +72,3 @@ Or if you copy them to the `elevations` folder:
 ## Examples
 
 See the `examples` folder for some elevation files and resulting spreadsheet.
-
-## TODO:
-
-- Remove default 'Sheet' worksheet from workbook.

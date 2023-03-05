@@ -90,6 +90,7 @@ def main(world, zoom, basedir, embark_elevation):
 
     if not (embark_elevation is None):
         wb.active = wb['Elev {0}'.format(embark_elevation)]
+    del wb['Sheet']
     print("Saving spreadsheet: ", end='', flush=True)
     wb.save("{0}.xlsx".format(world))
     print("done.")
