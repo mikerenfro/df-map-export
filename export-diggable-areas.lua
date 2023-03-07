@@ -93,8 +93,8 @@ local function export_diggable_areas()
                 if ground_layers[k] == true then
                     local filename = string.format("elevation-%+04d.txt", z_to_elevation(k))
                     local f = assert(io.open(filename, 'w'))
-                    print('Elevation ' .. k-127)
-                    -- io.stdout:write(string.format('%d ', k-127))
+                    print('Elevation ' .. z_to_elevation(k))
+                    -- io.stdout:write(string.format('%d ', z_to_elevation(k)))
                     -- io.stdout:flush()
                     for i=0, rows-1 do
                         row_string = ''
@@ -108,15 +108,15 @@ local function export_diggable_areas()
                 end
             else
                 -- io.stdout:write('\n')
-                print('Exiting at elevation '.. (k-127) .. ' to avoid spoilers')
+                print('Exiting at elevation '.. z_to_elevation(k) .. ' to avoid spoilers')
                 break
             end
         else
             if ground_layers[k] == true then
-                local filename = string.format("elevation-%+04d.txt", k-127)
+                local filename = string.format("elevation-%+04d.txt", z_to_elevation(k))
                 local f = assert(io.open(filename, 'w'))
-                print('Elevation ' .. k-127)
-                -- io.stdout:write(string.format('%d ', k-127))
+                print('Elevation ' .. z_to_elevation(k))
+                -- io.stdout:write(string.format('%d ', z_to_elevation(k)))
                 -- io.stdout:flush()
                 for i=0, rows-1 do
                     row_string = ''
