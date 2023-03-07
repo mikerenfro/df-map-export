@@ -42,6 +42,10 @@ local function is_diggable_wall(tileattrs)
     return false
 end
 
+local function z_to_elevation(z)
+    return z+df.global.world.map.region_z-100
+end
+
 local function export_diggable_areas()
     -- Determine embark map size, create 3D table for holding map data
     rows, cols, layers = dfhack.maps.getTileSize()
@@ -87,7 +91,7 @@ local function export_diggable_areas()
         if mode == 'nospoilers' then
             if visible_layers[k] == true then
                 if ground_layers[k] == true then
-                    local filename = string.format("elevation-%+04d.txt", k-127)
+                    local filename = string.format("elevation-%+04d.txt", z_to_elevation(k))
                     local f = assert(io.open(filename, 'w'))
                     print('Elevation ' .. k-127)
                     -- io.stdout:write(string.format('%d ', k-127))
