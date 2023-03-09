@@ -16,10 +16,12 @@ elevations:
 import argparse
 import glob
 from openpyxl import Workbook
-from openpyxl.formatting.rule import ColorScaleRule
+from openpyxl.formatting.rule import ColorScaleRule, CellIsRule
+from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 import os
 import re
+import string
 
 
 def main(world, zoom, basedir, embark_elevation):
@@ -64,6 +66,35 @@ def main(world, zoom, basedir, embark_elevation):
     sheet_last_column_letter = get_column_letter(sheet_last_column)
     print("Converting underground pixels in elevation: ", end='', flush=True)
     elevations = sorted(list(minimap_dict.keys()), key=int, reverse=True)
+    # Create conditional format rule for this sheet
+    white_fill = PatternFill(start_color='FEFEFE',
+                             end_color='FEFEFE',
+                             fill_type='solid')
+    black_fill = PatternFill(start_color='010101',
+                             end_color='010101',
+                             fill_type='solid')
+    light_brown_fill = PatternFill(start_color='C4A484',
+                             end_color='C4A484',
+                             fill_type='solid')
+    dark_brown_fill = PatternFill(start_color='5C4033',
+                                  end_color='5C4033',
+                                  fill_type='solid')
+    light_grey_fill = PatternFill(start_color='D3D3D3',
+                            end_color='D3D3D3',
+                            fill_type='solid')
+    dark_grey_fill = PatternFill(start_color='5A5A5A',
+                            end_color='5A5A5A',
+                            fill_type='solid')
+    blue_fill = PatternFill(start_color='0000FF',
+                            end_color='0000FF',
+                            fill_type='solid')
+    open_rule = CellIsRule(operator='equal', formula=[0], fill=white_fill)
+    hidden_rule = CellIsRule(operator='equal', formula=['"?"'], fill=black_fill)
+    soil_rule = CellIsRule(operator='equal', formula=['"s"'], fill=dark_brown_fill)
+    rock_rule = CellIsRule(operator='equal', formula=['"r"'], fill=dark_grey_fill)
+    tree_rule = CellIsRule(operator='equal', formula=['"T"'], fill=light_brown_fill)
+    boulder_rule = CellIsRule(operator='equal', formula=['"B"'], fill=light_grey_fill)
+    water_rule = CellIsRule(operator='equal', formula=['"~"'], fill=blue_fill)
     # for elevation, minimap in minimap_dict.items():
     for elevation in elevations:
         minimap = minimap_dict[elevation]
@@ -71,16 +102,18 @@ def main(world, zoom, basedir, embark_elevation):
         print(" {0}".format(elevation), end='', flush=True)
         for row, line in enumerate(minimap, start=1):
             for col, pixel in enumerate(line.strip(), start=1):
-                if (pixel=='1'):
+                if pixel == '0':
+                    continue
+                if (pixel in string.digits):
                     # print('Should make a black pixel at (row, col)=({0}, {1})'.format(row, col))
                     _ = ws.cell(column=col, row=row, value=int(pixel))
-
-        # Create conditional format rule for this sheet
-        rule = ColorScaleRule(start_type='min', start_color='FFFFFF',
-                              end_type='max', end_color='000000')
-        ws.conditional_formatting.add('{0}{1}:{2}{3}'.format(
-            sheet_first_column_letter, sheet_first_row,
-            sheet_last_column_letter, sheet_last_row), rule)
+                else:
+                    _ = ws.cell(column=col, row=row, value=pixel)
+        # Add conditional formatting to this worksheet
+        for rule in [open_rule, hidden_rule, soil_rule, rock_rule, tree_rule, boulder_rule, water_rule]:
+            ws.conditional_formatting.add('{0}{1}:{2}{3}'.format(
+                sheet_first_column_letter, sheet_first_row,
+                sheet_last_column_letter, sheet_last_row), rule)
         # Set width of columns
         for i in range(sheet_first_column, sheet_last_column+1):
             ws.column_dimensions[get_column_letter(i)].width = 2.875
