@@ -1,10 +1,8 @@
 # Dwarf Fortress Elevations to Map Tool
 
 Reads a series of text files for each elevation of a Dwarf Fortress embark,
-identifies the underground sections,
-and creates an Excel workbook showing the diggable areas with one worksheet per elevation.
-The workbook will have conditional formatting applied allowing you to copy/paste different values in the underground regions
-(0 is white, 1 is black, and values outside that range will be uncolored).
+and creates an Excel workbook showing the embark area's topography with one worksheet per elevation.
+The workbook uses conditional formatting of cell contents to differentiate various tile types (currently, bodies of water, trees, boulders, rock walls, soil walls, and subterranean tiles).
 
 This is a much better method than my first attempt that did a lot of image processing of screenshots, but does require use of [DFHack](https://docs.dfhack.org/) to create the text files.
 
