@@ -8,9 +8,9 @@ The workbook will have conditional formatting applied allowing you to copy/paste
 
 This is a much better method than my first attempt that did a lot of image processing of screenshots, but does require use of [DFHack](https://docs.dfhack.org/) to create the text files.
 
-[![Original minimap](embark-elevation-df-thumbnail.png)](embark-elevation-df.png)
+[![Original minimap elevation](df-elevation-thumbnail.png)](df-elevation.png)
 
-[![Corresponding worksheet from an Excel workbook](embark-elevation-excel-thumbnail.png)](embark-elevation-excel.png)
+[![Corresponding worksheet from an Excel workbook](excel-elevation-thumbnail.png)](excel-elevation.png)
 
 ## Installation
 
@@ -26,28 +26,27 @@ Currently uses:
 
 See [Installing DFHack](https://docs.dfhack.org/en/stable/docs/Installing.html) for instructions on how to install DFHack.
 
-Copy `export-diggable-areas.lua` to the DFHack scripts folder (in the Steam version, that's `Dwarf Fortress/hack/scripts`).
+Copy `export-map.lua` to the DFHack scripts folder (in the Steam version, that's `Dwarf Fortress/hack/scripts`).
 
 ## In Dwarf Fortress
 
 Ideally, right after you start a new embark with DFHack enabled,
-pause the game and run `export-diggable-areas` in DFHack.
-By default, `export-diggable-areas` will not show any fully subterranean elevations to reduce spoilers.
-Run it as `export-diggable-areas spoilers` (or any other parameter) to get exports from all elevations.
+pause the game and run `export-map` in DFHack.
+By default, `export-map` will not show any fully subterranean elevations to reduce spoilers.
+Run it as `export-map spoilers` (or any other parameter) to get exports from all elevations.
 This will write a set of elevation-*.txt files to the main Dwarf Fortress folder.
 
 ## Elevations folder
 
-Organize your text export files in this folder by world name, for example: `elevations/Mineally/elevation-*.txt` for all text files from the *Mineally* embark.
+Organize your text export files in this folder by world name, for example: `elevations/Quakevaults/elevation-*.txt` for all text files from the **Quakevaults** embark.
 
 ## Running
 
-`python df-screenshot-to-map.py --help` for help. Currently shows:
+`python df-map-export.py --help` for help. Currently shows:
 
 ```
-usage: df-screenshot-to-map.py [-h] [--basedir BASEDIR] [--zoom ZOOM]
-                               [--embark-elevation EMBARK_ELEVATION]
-                               world
+usage: df-map-export.py [-h] [--basedir BASEDIR] [--zoom ZOOM] [--embark-elevation EMBARK_ELEVATION]
+                        world
 
 positional arguments:
   world                 Folder in basedir containing minimap screenshots
@@ -61,13 +60,13 @@ options:
                         Elevation of embark site (if specified, will set active sheet in Excel workbook)
 ```
 
-For example, if you use the default text files in the `examples/elevations/Mineally` folder:
+For example, if you use the default text files in the `examples/elevations/Quakevaults` folder:
 
-`python .\df-screenshot-to-map.py --basedir examples/elevations Mineally --embark-elevation 36`
+`python .\df-map-export.py --basedir examples/elevations Quakevaults --embark-elevation 46`
 
 Or if you copy them to the `elevations` folder:
 
-`python .\df-screenshot-to-map.py Mineally --embark-elevation 36`
+`python .\df-map-export.py Quakevaults --embark-elevation 46`
 
 ## Examples
 
