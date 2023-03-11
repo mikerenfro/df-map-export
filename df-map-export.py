@@ -58,18 +58,11 @@ def main(world, zoom, basedir, embark_elevation):
         minimap_dict[elevation] = lines
 
     wb = Workbook()
-    sheet_first_row = 1
-    sheet_last_row = sheet_first_row + map_size[0] - 1
     sheet_first_column = 1
     sheet_last_column = sheet_first_column + map_size[1] - 1
-    sheet_first_column_letter = get_column_letter(sheet_first_column)
-    sheet_last_column_letter = get_column_letter(sheet_last_column)
     print("Converting underground pixels in elevation: ", end='', flush=True)
     elevations = sorted(list(minimap_dict.keys()), key=int, reverse=True)
-    # Create conditional format rule for this sheet
-    white_fill = PatternFill(start_color='FEFEFE',
-                             end_color='FEFEFE',
-                             fill_type='solid')
+    # Create styles for this sheet
     black_fill = PatternFill(start_color='010101',
                              end_color='010101',
                              fill_type='solid')
@@ -88,32 +81,26 @@ def main(world, zoom, basedir, embark_elevation):
     blue_fill = PatternFill(start_color='0000FF',
                             end_color='0000FF',
                             fill_type='solid')
-    open_rule = CellIsRule(operator='equal', formula=[0], fill=white_fill)
-    hidden_rule = CellIsRule(operator='equal', formula=['"?"'], fill=black_fill)
-    soil_rule = CellIsRule(operator='equal', formula=['"s"'], fill=dark_brown_fill)
-    rock_rule = CellIsRule(operator='equal', formula=['"r"'], fill=dark_grey_fill)
-    tree_rule = CellIsRule(operator='equal', formula=['"T"'], fill=light_brown_fill)
-    boulder_rule = CellIsRule(operator='equal', formula=['"B"'], fill=light_grey_fill)
-    water_rule = CellIsRule(operator='equal', formula=['"~"'], fill=blue_fill)
-    # for elevation, minimap in minimap_dict.items():
+    fill_dict = {
+        '?': black_fill,
+        'T': light_brown_fill,
+        's': dark_brown_fill,
+        'r': dark_grey_fill,
+        'B': light_grey_fill,
+        '~': blue_fill,
+    }
     for elevation in elevations:
         minimap = minimap_dict[elevation]
         ws = wb.create_sheet(title="Elev {0}".format(elevation))
         print(" {0}".format(elevation), end='', flush=True)
         for row, line in enumerate(minimap, start=1):
-            for col, pixel in enumerate(line.strip(), start=1):
-                if pixel == '0':
+            for col, pixel in enumerate(line.rstrip('\n'), start=1):
+                if pixel == ' ':
                     continue
-                if (pixel in string.digits):
-                    # print('Should make a black pixel at (row, col)=({0}, {1})'.format(row, col))
-                    _ = ws.cell(column=col, row=row, value=int(pixel))
                 else:
-                    _ = ws.cell(column=col, row=row, value=pixel)
-        # Add conditional formatting to this worksheet
-        for rule in [open_rule, hidden_rule, soil_rule, rock_rule, tree_rule, boulder_rule, water_rule]:
-            ws.conditional_formatting.add('{0}{1}:{2}{3}'.format(
-                sheet_first_column_letter, sheet_first_row,
-                sheet_last_column_letter, sheet_last_row), rule)
+                    c = ws.cell(column=col, row=row)
+                    if pixel in fill_dict:
+                        c.fill = fill_dict[pixel]
         # Set width of columns
         for i in range(sheet_first_column, sheet_last_column+1):
             ws.column_dimensions[get_column_letter(i)].width = 2.875
