@@ -99,7 +99,7 @@ local function scan_elevations()
                 elseif is_boulder(tileattrs) then
                     mt[i][j][k] = 'B'
                 else
-                    mt[i][j][k] = 0
+                    mt[i][j][k] = ' '
                 end
             end
         end
@@ -155,7 +155,7 @@ local function find_visible_layers()
     return visible_layers
 end
 
-local function export_diggable_areas()
+local function export_map_elevations()
     -- print(dump(tm))
     -- print(dump(tm.GetTileMat(100,100,100)))
     -- Determine embark map size, create 3D table for holding map data
@@ -202,4 +202,4 @@ local function export_diggable_areas()
     end
 end
 
-export_diggable_areas(...)
+export_map_elevations(...)
