@@ -31,7 +31,7 @@ Copy `export-map.lua` to the DFHack scripts folder (in the Steam version, that's
 Ideally, right after you start a new embark with DFHack enabled,
 pause the game and run `export-map` in DFHack.
 By default, `export-map` will not show any fully subterranean elevations to reduce spoilers.
-Run it as `export-map spoilers` (or any other parameter) to get exports from all elevations.
+Run it as `export-map spoilers` to get exports from all elevations.
 This will write a set of elevation-*.txt files to the main Dwarf Fortress folder.
 
 ## Elevations folder
