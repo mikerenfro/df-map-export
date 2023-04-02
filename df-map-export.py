@@ -54,12 +54,14 @@ def main(world, zoom, basedir, embark_elevation):
         with open(filename, 'r') as f:
             lines = f.readlines()
             if map_size == (None, None):
-                map_size = (len(lines), len(lines[0].strip()))
+                map_size = (len(lines), len(lines[0].rstrip('\n')))
         minimap_dict[elevation] = lines
 
     wb = Workbook()
     sheet_first_column = 1
     sheet_last_column = sheet_first_column + map_size[1] - 1
+    # print("map_size =", map_size)
+    # print("sheet_last_column =", sheet_last_column)
     print("Converting underground pixels in elevation: ", end='', flush=True)
     elevations = sorted(list(minimap_dict.keys()), key=int, reverse=True)
     # Create styles for this sheet
