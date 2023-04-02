@@ -14,8 +14,12 @@ local utils = require('utils')
 local args = {...}
 local mode = nil
 local spoilers = false
+local debug = false
 if args[1] == 'spoilers' then
     spoilers = true
+end
+if args[2] == 'debug' then
+    debug = true
 end
 
 local function dump(o)
@@ -165,6 +169,13 @@ local function find_ground_layers()
                 break
             end
         end
+        if debug then
+            if ground_layers[z] then
+                print('Checked z-level '..z..', (elevation '..z_to_elevation(z)..'), ground_layers[z]=true')
+            else
+                print('Checked z-level '..z..', (elevation '..z_to_elevation(z)..'), ground_layers[z]=false')
+            end
+        end
     end
     return ground_layers
 end
@@ -188,13 +199,30 @@ local function find_visible_layers()
                 break
             end
         end
+        if debug then
+            if visible_layers[z] then
+                print('Checked z-level '..z..', (elevation '..z_to_elevation(z)..'), visible_layers[z]=true')
+            else
+                print('Checked z-level '..z..', (elevation '..z_to_elevation(z)..'), visible_layers[z]=false')
+            end
+        end
     end
     return visible_layers
 end
 
 local function export_map_elevations()
     _, _, zmax = dfhack.maps.getTileSize()
+    if debug then
+        print('find_ground_layers()')
+    end
     local ground_layers = find_ground_layers()
+    -- if debug then
+    --     print('ground_layers = ')
+    --     print(dump(ground_layers))
+    -- end
+    if debug then
+        print('find_visible_layers()')
+    end
     local visible_layers = find_visible_layers()
     if spoilers then
         print('Finding elevations with diggable areas (including fully-subterranean levels):')
