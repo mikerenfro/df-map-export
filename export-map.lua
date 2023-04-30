@@ -238,7 +238,7 @@ local function export_map_elevations()
     end
 
     for z=zmax-1, 0, -1 do
-        if ground_layers[z] then
+        if ground_layers[z] or ground_layers[z-1] then
             export_one_z_level(z, visible_layers[z], spoilers)
         end
     end
