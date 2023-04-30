@@ -102,14 +102,14 @@ local function classify_tile(x, y, z, spoilers)
     end
     if not is_visible(x, y, z) and not spoilers then
         return '?'
+    elseif is_water(tileattrs) then
+        return '~'
     elseif (is_diggable_wall(tileattrs) and is_hard(tileattrs)) then
         return 'r'
     elseif (is_diggable_wall(tileattrs) and not is_hard(tileattrs)) then
         return 's'
     elseif is_tree(tileattrs) then
         return 'T'
-    elseif is_water(tileattrs) then
-        return '~'
     elseif is_boulder(tileattrs) then
         return 'B'
     else
