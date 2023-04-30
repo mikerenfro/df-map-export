@@ -157,12 +157,19 @@ local function find_ground_layers()
             if ground_layers[z] == false then
                 for x=0, xmax-1 do
                     -- j, i since (y, x) matches (row, col)
-                    tileattrs = df.tiletype.attrs[dfhack.maps.getTileType(x, y, z)]
-                    if is_diggable_wall(tileattrs) then
-                        if ground_layers[z] == false then
-                            ground_layers[z] = true
-                            break
+                    local tiletype = dfhack.maps.getTileType(x, y, z)
+                    if tiletype ~= nil then
+                    -- status, err = pcall(function() tileattrs = df.tiletype.attrs[dfhack.maps.getTileType(x, y, z)] end)
+                    -- if status then
+                        tileattrs = df.tiletype.attrs[dfhack.maps.getTileType(x, y, z)]
+                        if is_diggable_wall(tileattrs) then
+                            if ground_layers[z] == false then
+                                ground_layers[z] = true
+                                break
+                            end
                         end
+                    -- else
+                    --     print('At (x,y,z)=('..x..','..y..','..z..'), tiletype was nil')
                     end
                 end
             else
