@@ -9,9 +9,8 @@ Given a series of text files generated from a DFHack Lua script at different
 elevations:
 
 - For each elevation:
-    - read a line from the elevation file (contains 0 or 1 in each position)
-    - insert each value from the line into a new workbook sheet
-    - apply a color scale conditional format to the sheet
+    - read a line from the elevation file (contains various characters in each position)
+    - insert a blank cell into the worksheet for each position, with background color set by the character
 """
 import argparse
 import glob
@@ -110,9 +109,10 @@ def main(world, zoom, basedir, embark_elevation):
 
     print(" done.")
 
-    if not (embark_elevation is None):
-        wb.active = wb['Elev {0}'.format(embark_elevation)]
     del wb['Sheet']
+    if not (embark_elevation is None):
+        print('Setting Elev {0} as active'.format(embark_elevation))
+        wb.active = wb['Elev {0}'.format(embark_elevation)]
     print("Saving spreadsheet: ", end='', flush=True)
     wb.save("{0}.xlsx".format(world))
     print("done.")
