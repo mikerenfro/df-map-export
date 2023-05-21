@@ -132,7 +132,8 @@ local function export_one_z_level(z, vis_check, spoilers)
         print('Exporting z-level ' .. z .. ' (elevation '.. z_to_elevation(z) .. ')')
         local xmax, ymax, _ = dfhack.maps.getTileSize()
         local elevation = z_to_elevation(z)
-        local filename = string.format("elevation-%+04d.txt", elevation)
+        local fortress_name = dfhack.TranslateName(df.global.world.world_data.active_site[0].name, false)
+        local filename = string.format("%s-%+04d.txt", fortress_name, elevation)
         local f = assert(io.open(filename, 'w'))
         for y=0, ymax-1 do
             local row_string = ''

@@ -45,10 +45,10 @@ def main(world, zoom, basedir, embark_elevation):
     """
     minimap_dict = {}
     map_size = (None, None)
-    if not glob.glob(os.path.join(basedir, world, 'elevation-*.txt')):
+    if not glob.glob(os.path.join(basedir, world, '*.txt')):
         raise OSError('{0} contains no elevation-*.txt files'.format(os.path.join(basedir, world)))
-    for filename in glob.glob(os.path.join(basedir, world, 'elevation-*.txt')):
-        elevation_list = re.findall('elevation-([0-9-+]+)\.txt', filename)
+    for filename in glob.glob(os.path.join(basedir, world, '*.txt')):
+        elevation_list = re.findall('-([0-9-+]+)\.txt$', filename)
         elevation = int(elevation_list[0])
         with open(filename, 'r') as f:
             lines = f.readlines()
