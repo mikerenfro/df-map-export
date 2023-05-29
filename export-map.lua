@@ -89,12 +89,12 @@ local function is_plant(tileattrs)
     return (tileattrs.material == df.tiletype_material.PLANT)
 end
 
-local function is_soil_floor(tileattrs)
-    return (tileattrs.shape == df.tiletype_shape.FLOOR) and (tileattrs.material == df.tiletype_material.SOIL)
+local function is_soil_floor_or_ramp(tileattrs)
+    return ((tileattrs.shape == df.tiletype_shape.FLOOR) or (tileattrs.shape == df.tiletype_shape.RAMP)) and (tileattrs.material == df.tiletype_material.SOIL)
 end
 
-local function is_stone_floor(tileattrs)
-    return (tileattrs.shape == df.tiletype_shape.FLOOR) and (tileattrs.material == df.tiletype_material.STONE)
+local function is_stone_floor_or_ramp(tileattrs)
+    return ((tileattrs.shape == df.tiletype_shape.FLOOR) or (tileattrs.shape == df.tiletype_shape.RAMP)) and (tileattrs.material == df.tiletype_material.STONE)
 end
 
 local function is_pebbles(tileattrs)
@@ -128,13 +128,13 @@ local function classify_tile(x, y, z, spoilers)
         return 'g'
     elseif is_plant(tileattrs) then
         return 'p'
-    elseif (is_diggable_wall(tileattrs) and not is_hard(tileattrs)) or is_soil_floor(tileattrs) then
+    elseif (is_diggable_wall(tileattrs) and not is_hard(tileattrs)) or is_soil_floor_or_ramp(tileattrs) then
         return 's'
     elseif is_tree(tileattrs) then
         return 'T'
     elseif is_boulder(tileattrs) then
         return 'B'
-    elseif (is_diggable_wall(tileattrs) and is_hard(tileattrs)) or is_stone_floor(tileattrs) or is_pebbles(tileattrs) then
+    elseif (is_diggable_wall(tileattrs) and is_hard(tileattrs)) or is_stone_floor_or_ramp(tileattrs) or is_pebbles(tileattrs) then
         return 'r'
     else
         return ' '
@@ -263,16 +263,15 @@ local function export_map_elevations()
     end
 
     local df_path = dfhack.getDFPath()
-    local export_parent = df_path .. "/map-exports"
-    dfhack.filesystem.mkdir(export_parent)
-    local export_path = export_parent .. "/" .. dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
-    dfhack.filesystem.mkdir(export_path)
+    local export_path = "map-exports/" .. dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
+    dfhack.filesystem.mkdir_recursive(export_path)
 
     for z=zmax-1, 0, -1 do
         if ground_layers[z] or ground_layers[z-1] then
             export_one_z_level(export_path, z, visible_layers[z], spoilers)
         end
     end
+    print("Map export files can be found in Dwarf Fortress folder under "..export_path)
 end
 
 export_map_elevations(...)
