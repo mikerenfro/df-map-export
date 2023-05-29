@@ -79,6 +79,12 @@ def main(world, zoom, basedir, embark_elevation):
     dark_grey_fill = PatternFill(start_color='5A5A5A',
                             end_color='5A5A5A',
                             fill_type='solid')
+    light_green_fill = PatternFill(start_color='92D050',
+                                   end_color='92D050',
+                                   fill_type='solid')
+    dark_green_fill = PatternFill(start_color='76933C',
+                                  end_color='76933C',
+                                  fill_type='solid')
     blue_fill = PatternFill(start_color='0000FF',
                             end_color='0000FF',
                             fill_type='solid')
@@ -88,6 +94,8 @@ def main(world, zoom, basedir, embark_elevation):
         's': dark_brown_fill,
         'r': dark_grey_fill,
         'B': light_grey_fill,
+        'g': light_green_fill,
+        'p': dark_green_fill,
         '~': blue_fill,
     }
     for elevation in elevations:
