@@ -78,7 +78,27 @@ local function is_visible(x, y, z)
 end
 
 local function is_water(tileattrs)
-    return (tileattrs.material == df.tiletype_material.BROOK) or (tileattrs.material == df.tiletype_material.POOL) or (tileattrs.material == df.tiletype_material.FROZEN_LIQUID)
+    return (tileattrs.material == df.tiletype_material.RIVER) or (tileattrs.material == df.tiletype_material.BROOK) or (tileattrs.material == df.tiletype_material.POOL) or (tileattrs.material == df.tiletype_material.FROZEN_LIQUID)
+end
+
+local function is_grass(tileattrs)
+    return (tileattrs.material == df.tiletype_material.GRASS_LIGHT) or (tileattrs.material == df.tiletype_material.GRASS_DARK) or (tileattrs.material == df.tiletype_material.GRASS_DRY) or (tileattrs.material == df.tiletype_material.GRASS_DEAD)
+end
+
+local function is_plant(tileattrs)
+    return (tileattrs.material == df.tiletype_material.PLANT)
+end
+
+local function is_soil_floor(tileattrs)
+    return (tileattrs.shape == df.tiletype_shape.FLOOR) and (tileattrs.material == df.tiletype_material.SOIL)
+end
+
+local function is_stone_floor(tileattrs)
+    return (tileattrs.shape == df.tiletype_shape.FLOOR) and (tileattrs.material == df.tiletype_material.STONE)
+end
+
+local function is_pebbles(tileattrs)
+    return (tileattrs.shape == df.tiletype_shape.PEBBLES)
 end
 
 local function z_to_elevation(z)
@@ -104,21 +124,25 @@ local function classify_tile(x, y, z, spoilers)
         return '?'
     elseif is_water(tileattrs) then
         return '~'
-    elseif (is_diggable_wall(tileattrs) and is_hard(tileattrs)) then
-        return 'r'
-    elseif (is_diggable_wall(tileattrs) and not is_hard(tileattrs)) then
+    elseif is_grass(tileattrs) then
+        return 'g'
+    elseif is_plant(tileattrs) then
+        return 'p'
+    elseif (is_diggable_wall(tileattrs) and not is_hard(tileattrs)) or is_soil_floor(tileattrs) then
         return 's'
     elseif is_tree(tileattrs) then
         return 'T'
     elseif is_boulder(tileattrs) then
         return 'B'
+    elseif (is_diggable_wall(tileattrs) and is_hard(tileattrs)) or is_stone_floor(tileattrs) or is_pebbles(tileattrs) then
+        return 'r'
     else
         return ' '
     end
 
 end
 
-local function export_one_z_level(z, vis_check, spoilers)
+local function export_one_z_level(folder, z, vis_check, spoilers)
     local spoilers_str = 'false'
     local vis_check_str = 'false'
     if spoilers == true then
@@ -132,8 +156,8 @@ local function export_one_z_level(z, vis_check, spoilers)
         print('Exporting z-level ' .. z .. ' (elevation '.. z_to_elevation(z) .. ')')
         local xmax, ymax, _ = dfhack.maps.getTileSize()
         local elevation = z_to_elevation(z)
-        local fortress_name = dfhack.TranslateName(df.global.world.world_data.active_site[0].name, false)
-        local filename = string.format("%s-%+04d.txt", fortress_name, elevation)
+        local fortress_name = dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
+        local filename = string.format("%s/%s-%+04d.txt", folder, fortress_name, elevation)
         local f = assert(io.open(filename, 'w'))
         for y=0, ymax-1 do
             local row_string = ''
@@ -238,9 +262,15 @@ local function export_map_elevations()
         print('Finding elevations with both visible and diggable areas:')
     end
 
+    local df_path = dfhack.getDFPath()
+    local export_parent = df_path .. "/map-exports"
+    dfhack.filesystem.mkdir(export_parent)
+    local export_path = export_parent .. "/" .. dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
+    dfhack.filesystem.mkdir(export_path)
+
     for z=zmax-1, 0, -1 do
         if ground_layers[z] or ground_layers[z-1] then
-            export_one_z_level(z, visible_layers[z], spoilers)
+            export_one_z_level(export_path, z, visible_layers[z], spoilers)
         end
     end
 end
