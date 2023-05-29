@@ -73,8 +73,8 @@ def main(world, zoom, basedir, embark_elevation):
     dark_brown_fill = PatternFill(start_color='5C4033',
                                   end_color='5C4033',
                                   fill_type='solid')
-    light_grey_fill = PatternFill(start_color='D3D3D3',
-                            end_color='D3D3D3',
+    light_grey_fill = PatternFill(start_color='A6A6A6',
+                            end_color='A6A6A6',
                             fill_type='solid')
     dark_grey_fill = PatternFill(start_color='5A5A5A',
                             end_color='5A5A5A',
