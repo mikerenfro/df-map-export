@@ -153,3 +153,4 @@ cython_debug/
 elevations/*
 !elevations/.gitkeep
 *.xlsx
+!examples/*.xlsx

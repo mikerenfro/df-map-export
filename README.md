@@ -2,13 +2,11 @@
 
 Reads a series of text files for each elevation of a Dwarf Fortress embark,
 and creates an Excel workbook showing the embark area's topography with one worksheet per elevation.
-The workbook formats cell contents to differentiate various tile types (currently, bodies of water, trees, boulders, rock walls, soil walls, and subterranean tiles).
+The workbook formats cell contents to differentiate various tile types (currently, bodies of water, trees, grass, plants, boulders, rock walls/ramps, soil walls/ramps, pebbles, and subterranean tiles).
 
 This is a much better method than my first attempt that did a lot of image processing of screenshots, but does require use of [DFHack](https://docs.dfhack.org/) to create the text files.
 
-[![Original minimap elevation](df-elevation-thumbnail.png)](df-elevation.png)
-
-[![Corresponding worksheet from an Excel workbook](excel-elevation-thumbnail.png)](excel-elevation.png)
+[![Comparison of DF map elevation to Excel worksheet](map-export-combined-thumbnail.png)](map-export-combined.png)
 
 ## Installation
 
@@ -32,9 +30,9 @@ Ideally, right after you start a new embark with DFHack enabled,
 pause the game and run `export-map` in DFHack.
 By default, `export-map` will not show any fully subterranean elevations to reduce spoilers.
 Run it as `export-map spoilers` to get exports from all elevations.
-This will write a set of NAME_OF_FORTRESS-*.txt files to the main Dwarf Fortress folder.
+This will write a set of `map-exports/NAME_OF_FORTRESS/NAME_OF_FORTRESS-*.txt` files under the main Dwarf Fortress folder.
 
-## Elevations folder
+## `elevations` folder
 
 Organize your text export files in this folder by world name, for example: `elevations/Quakevaults/Quakevaults-*.txt` for all text files from the **Quakevaults** embark.
 
@@ -68,4 +66,4 @@ Or if you copy them to the `elevations` folder:
 
 ## Examples
 
-See the `examples` folder for some elevation files and resulting spreadsheet.
+See the `examples` folder for some elevation files and resulting spreadsheets.
