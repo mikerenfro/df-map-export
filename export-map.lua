@@ -77,6 +77,10 @@ local function is_visible(x, y, z)
     return dfhack.maps.isTileVisible(x, y, z)
 end
 
+local function is_magma(tileflags)
+    return tileflags.liquid_type and (tileflags.flow_size > 0)
+end
+
 local function is_water(tileattrs)
     return (tileattrs.material == df.tiletype_material.RIVER) or (tileattrs.material == df.tiletype_material.BROOK) or (tileattrs.material == df.tiletype_material.POOL) or (tileattrs.material == df.tiletype_material.FROZEN_LIQUID)
 end
@@ -119,9 +123,12 @@ local function classify_tile(x, y, z, spoilers)
         return '!'
     else
         tileattrs = df.tiletype.attrs[dfhack.maps.getTileType(x, y, z)]
+        tileflags = dfhack.maps.getTileFlags(x, y, z)
     end
     if not is_visible(x, y, z) and not spoilers then
         return '?'
+    elseif is_magma(tileflags) then
+        return 'M'
     elseif is_water(tileattrs) then
         return '~'
     elseif is_grass(tileattrs) then
@@ -265,6 +272,7 @@ local function export_map_elevations()
     local df_path = dfhack.getDFPath()
     local export_path = "map-exports/" .. dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
     dfhack.filesystem.mkdir_recursive(export_path)
+
 
     for z=zmax-1, 0, -1 do
         if ground_layers[z] or ground_layers[z-1] then
