@@ -14,6 +14,7 @@ elevations:
 """
 import argparse
 import glob
+import openpyxl
 from openpyxl import Workbook
 from openpyxl.formatting.rule import ColorScaleRule, CellIsRule
 from openpyxl.styles import PatternFill
@@ -56,7 +57,8 @@ def main(world, zoom, basedir, embark_elevation):
                 map_size = (len(lines), len(lines[0].rstrip('\n')))
         minimap_dict[elevation] = lines
 
-    wb = Workbook()
+    # wb = Workbook()
+    wb = openpyxl.reader.excel.load_workbook('template.xlsm', keep_vba=True)
     sheet_first_column = 1
     sheet_last_column = sheet_first_column + map_size[1] - 1
     # print("map_size =", map_size)
@@ -121,12 +123,12 @@ def main(world, zoom, basedir, embark_elevation):
 
     print(" done.")
 
-    del wb['Sheet']
+    # del wb['Sheet']
     if not (embark_elevation is None):
         print('Setting Elev {0} as active'.format(embark_elevation))
         wb.active = wb['Elev {0}'.format(embark_elevation)]
     print("Saving spreadsheet: ", end='', flush=True)
-    wb.save("{0}.xlsx".format(world))
+    wb.save("{0}.xlsm".format(world))
     print("done.")
 
 
