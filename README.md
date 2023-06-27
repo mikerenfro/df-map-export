@@ -41,7 +41,7 @@ Organize your text export files in this folder by world name, for example: `elev
 `python df-map-export.py --help` for help. Currently shows:
 
 ```
-usage: df-map-export.py [-h] [--basedir BASEDIR] [--zoom ZOOM] [--embark-elevation EMBARK_ELEVATION]
+usage: df-map-export.py [-h] [--basedir BASEDIR] [--zoom ZOOM] [--embark-elevation EMBARK_ELEVATION] [--enable-macros]
                         world
 
 positional arguments:
@@ -54,7 +54,11 @@ options:
   --zoom ZOOM           Spreadsheet zoom level (in percent, defaults to 25)
   --embark-elevation EMBARK_ELEVATION
                         Elevation of embark site (if specified, will set active sheet in Excel workbook)
+  --enable-macros       Create Excel workbook with macros to propagate zoom level and cell location across sheets
 ```
+
+The `--enable-macros` parameter adds some VBA code to the workbook that will keep track of your zoom level and position in the active worksheet and set the zoom level and position of new worksheets to match.
+That lets you easily move through worksheets to get a feel for how your fortress works in a 3D sense.
 
 For example, if you use the default text files in the `examples/elevations/Quakevaults` folder:
 
