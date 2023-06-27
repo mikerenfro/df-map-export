@@ -14,6 +14,7 @@ elevations:
 """
 import argparse
 import glob
+import openpyxl
 from openpyxl import Workbook
 from openpyxl.formatting.rule import ColorScaleRule, CellIsRule
 from openpyxl.styles import PatternFill
@@ -23,7 +24,7 @@ import re
 import string
 
 
-def main(world, zoom, basedir, embark_elevation):
+def main(world, zoom, basedir, embark_elevation, enable_macros=False):
     """
     Convert a folder of elevation files into editable Excel format.
 
@@ -56,7 +57,13 @@ def main(world, zoom, basedir, embark_elevation):
                 map_size = (len(lines), len(lines[0].rstrip('\n')))
         minimap_dict[elevation] = lines
 
-    wb = Workbook()
+    if enable_macros:
+        wb = openpyxl.reader.excel.load_workbook('template.xlsm', keep_vba=True)
+        filename = "{0}.xlsm".format(world)
+    else:
+        wb = Workbook()
+        filename = "{0}.xlsx".format(world)
+
     sheet_first_column = 1
     sheet_last_column = sheet_first_column + map_size[1] - 1
     # print("map_size =", map_size)
@@ -121,12 +128,12 @@ def main(world, zoom, basedir, embark_elevation):
 
     print(" done.")
 
-    del wb['Sheet']
+    # del wb['Sheet']
     if not (embark_elevation is None):
         print('Setting Elev {0} as active'.format(embark_elevation))
         wb.active = wb['Elev {0}'.format(embark_elevation)]
     print("Saving spreadsheet: ", end='', flush=True)
-    wb.save("{0}.xlsx".format(world))
+    wb.save(filename)
     print("done.")
 
 
@@ -138,7 +145,11 @@ if __name__ == "__main__":
                         help="Spreadsheet zoom level (in percent, defaults to 25)")
     parser.add_argument("--embark-elevation", type=int,
                         help="Elevation of embark site (if specified, will set active sheet in Excel workbook)")
+    parser.add_argument("--enable-macros", action='store_true',
+                        help="Create Excel workbook with macros to propagate zoom level and cell location across sheets")
     parser.add_argument("world", type=str,
                         help="Folder in basedir containing minimap screenshots")
     args = parser.parse_args()
-    main(world=args.world, basedir=args.basedir, zoom=args.zoom, embark_elevation=args.embark_elevation)
+    main(world=args.world, basedir=args.basedir, zoom=args.zoom,
+         embark_elevation=args.embark_elevation,
+         enable_macros=args.enable_macros)

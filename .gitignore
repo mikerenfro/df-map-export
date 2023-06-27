@@ -154,3 +154,5 @@ elevations/*
 !elevations/.gitkeep
 *.xlsx
 !examples/*.xlsx
+*.xlsm
+!examples/*.xlsm
