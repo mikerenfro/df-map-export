@@ -163,8 +163,8 @@ local function export_one_z_level(folder, z, vis_check, spoilers)
         print('Exporting z-level ' .. z .. ' (elevation '.. z_to_elevation(z) .. ')')
         local xmax, ymax, _ = dfhack.maps.getTileSize()
         local elevation = z_to_elevation(z)
-        local fortress_name = dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
-        local filename = string.format("%s/%s-%+04d.txt", folder, fortress_name, elevation)
+        local fortress_name = dfhack.translation.translateName(df.global.world.world_data.active_site[0].name)
+        local filename = string.format("%s/%s-%+04d.txt", folder, dfhack.capitalizeStringWords(dfhack.toSearchNormalized(fortress_name)), elevation)
         local f = assert(io.open(filename, 'w'))
         for y=0, ymax-1 do
             local row_string = ''
@@ -270,7 +270,8 @@ local function export_map_elevations()
     end
 
     local df_path = dfhack.getDFPath()
-    local export_path = "map-exports/" .. dfhack.TranslateName(df.global.world.world_data.active_site[0].name)
+    local fortress_name = dfhack.translation.translateName(df.global.world.world_data.active_site[0].name)
+    local export_path = "map-exports/" .. dfhack.capitalizeStringWords(dfhack.toSearchNormalized(fortress_name))
     dfhack.filesystem.mkdir_recursive(export_path)
 
 
